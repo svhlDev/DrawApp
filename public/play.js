@@ -155,11 +155,12 @@ function clampToPlot(x, y) {
 // ─── Drawing ───
 
 function getDrawSettings() {
+  const isEraser = currentBrush === 'eraser';
   return {
-    color: document.getElementById('color-picker').value,
+    color: isEraser ? '#0a0a0a' : document.getElementById('color-picker').value,
     brushSize: parseInt(sizeSlider.value),
-    opacity: parseInt(opacitySlider.value) / 100,
-    brush: currentBrush
+    opacity: isEraser ? 1 : parseInt(opacitySlider.value) / 100,
+    brush: isEraser ? 'round' : currentBrush
   };
 }
 
