@@ -18,8 +18,6 @@ let currentBrush = 'round';
 let displayRatio = 1;
 let viewOffsetX = 0;
 let viewOffsetY = 0;
-let userZoom = 1; // 0.4 – 1.0 from slider
-
 // ─── DOM ───
 const canvas = document.getElementById('canvas');
 const ctx = canvas.getContext('2d');
@@ -27,7 +25,6 @@ const joinBtn = document.getElementById('join-btn');
 const changePlotBtn = document.getElementById('change-plot-btn');
 const sizeSlider = document.getElementById('brush-size');
 const opacitySlider = document.getElementById('opacity');
-const zoomSlider = document.getElementById('zoom-slider');
 
 // Brush size/opacity readout
 sizeSlider.addEventListener('input', () => {
@@ -35,13 +32,6 @@ sizeSlider.addEventListener('input', () => {
 });
 opacitySlider.addEventListener('input', () => {
   document.getElementById('opacity-val').textContent = opacitySlider.value;
-});
-
-// Zoom slider — rescales canvas display without losing content
-zoomSlider.addEventListener('input', () => {
-  document.getElementById('zoom-val').textContent = zoomSlider.value;
-  userZoom = parseInt(zoomSlider.value) / 100;
-  applyZoom();
 });
 
 // Brush type buttons
@@ -102,8 +92,6 @@ function joinRoom() {
   });
 }
 
-let maxDisplayRatio = 1; // full-size ratio before user zoom
-
 function initCanvas() {
   const dpr = window.devicePixelRatio || 1;
   const wrapperEl = document.querySelector('.canvas-wrapper');
@@ -114,8 +102,7 @@ function initCanvas() {
   viewOffsetX = myPlot.x;
   viewOffsetY = myPlot.y;
 
-  maxDisplayRatio = Math.min(wrapperWidth / myPlot.w, wrapperHeight / myPlot.h);
-  displayRatio = maxDisplayRatio * userZoom;
+  displayRatio = Math.min(wrapperWidth / myPlot.w, wrapperHeight / myPlot.h);
   const displayW = myPlot.w * displayRatio;
   const displayH = myPlot.h * displayRatio;
 
@@ -127,13 +114,6 @@ function initCanvas() {
 
   ctx.fillStyle = '#0a0a0a';
   ctx.fillRect(0, 0, myPlot.w, myPlot.h);
-}
-
-function applyZoom() {
-  if (!myPlot) return;
-  displayRatio = maxDisplayRatio * userZoom;
-  canvas.style.width = (myPlot.w * displayRatio) + 'px';
-  canvas.style.height = (myPlot.h * displayRatio) + 'px';
 }
 
 function updatePlotInfo() {

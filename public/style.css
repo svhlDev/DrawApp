@@ -313,14 +313,21 @@ input[type="text"]:focus {
    PLAYER LAYOUT
    ═══════════════════════════════════════ */
 
-.play-body { touch-action: none; }
+.play-body {
+  touch-action: none;
+  display: flex;
+  justify-content: center;
+  padding-top: env(safe-area-inset-top, 0px);
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
 
 .play-screen {
   display: flex;
   flex-direction: column;
   height: 100vh;
   height: 100dvh; /* dynamic viewport for mobile */
-  padding-top: env(safe-area-inset-top, 0px); /* iPhone notch/Dynamic Island */
+  width: 100%;
+  max-width: 500px;
 }
 
 .toolbar {
