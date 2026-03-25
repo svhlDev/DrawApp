@@ -325,31 +325,178 @@ function drawPlotOverlay() {
   ctx.fillText('YOUR PLOT', myPlot.w - 6, myPlot.h - 6);
 }
 
-// ─── Plot Change ───
+// ─── Plot Picker ───
 
-changePlotBtn.addEventListener('click', () => {
+const plotPicker = document.getElementById('plot-picker');
+const plotPickerGrid = document.getElementById('plot-picker-grid');
+
+document.getElementById('plot-picker-cancel').addEventListener('click', closePlotPicker);
+
+function closePlotPicker() {
+  plotPicker.style.display = 'none';
+}
+
+function getDirectionLabel(currentId, targetId) {
+  const curRow = Math.floor(currentId / 5);
+  const curCol = currentId % 5;
+  const tarRow = Math.floor(targetId / 5);
+  const tarCol = targetId % 5;
+  if (tarRow < curRow) return 'Above';
+  if (tarRow > curRow) return 'Below';
+  if (tarCol < curCol) return 'Left';
+  if (tarCol > curCol) return 'Right';
+  return '';
+}
+
+function renderPreviewCanvas(canvasEl, plot, strokes) {
+  const prevCtx = canvasEl.getContext('2d');
+  const scale = canvasEl.width / plot.w;
+
+  prevCtx.fillStyle = '#0a0a0a';
+  prevCtx.fillRect(0, 0, canvasEl.width, canvasEl.height);
+
+  for (const stroke of strokes) {
+    prevCtx.save();
+    prevCtx.globalAlpha = stroke.opacity;
+    prevCtx.strokeStyle = stroke.color;
+    prevCtx.fillStyle = stroke.color;
+    prevCtx.lineWidth = stroke.brushSize * scale;
+    prevCtx.lineCap = stroke.brush === 'square' ? 'butt' : 'round';
+    prevCtx.lineJoin = 'round';
+
+    if (stroke.brush === 'spray') {
+      for (const p of stroke.points) {
+        for (let i = 0; i < 4; i++) {
+          const angle = Math.random() * Math.PI * 2;
+          const radius = Math.random() * stroke.brushSize * scale;
+          prevCtx.fillRect(
+            (p.x - plot.x) * scale + Math.cos(angle) * radius,
+            (p.y - plot.y) * scale + Math.sin(angle) * radius,
+            1, 1
+          );
+        }
+      }
+    } else if (stroke.points.length === 1) {
+      prevCtx.beginPath();
+      prevCtx.arc(
+        (stroke.points[0].x - plot.x) * scale,
+        (stroke.points[0].y - plot.y) * scale,
+        stroke.brushSize * scale / 2, 0, Math.PI * 2
+      );
+      prevCtx.fill();
+    } else {
+      prevCtx.beginPath();
+      prevCtx.moveTo(
+        (stroke.points[0].x - plot.x) * scale,
+        (stroke.points[0].y - plot.y) * scale
+      );
+      for (let i = 1; i < stroke.points.length; i++) {
+        prevCtx.lineTo(
+          (stroke.points[i].x - plot.x) * scale,
+          (stroke.points[i].y - plot.y) * scale
+        );
+      }
+      prevCtx.stroke();
+    }
+
+    prevCtx.restore();
+  }
+}
+
+function openPlotPicker() {
   changePlotBtn.disabled = true;
   changePlotBtn.textContent = '...';
 
-  socket.emit('request-plot-change', (response) => {
+  socket.emit('get-adjacent-plots', (response) => {
     changePlotBtn.disabled = false;
-    changePlotBtn.textContent = '↻ New Plot';
+    changePlotBtn.textContent = '↻ Move';
 
     if (response.error) {
       document.getElementById('status').textContent = response.error;
-      setTimeout(() => {
-        document.getElementById('status').textContent = '';
-      }, 3000);
+      setTimeout(() => { document.getElementById('status').textContent = ''; }, 3000);
+      return;
+    }
+
+    plotPickerGrid.innerHTML = '';
+
+    // Sort: up, left, right, down for natural layout
+    const dirOrder = { 'Above': 0, 'Left': 1, 'Right': 2, 'Below': 3 };
+    const sorted = response.adjacentPlots.slice().sort((a, b) => {
+      const da = getDirectionLabel(response.currentPlotId, a.id);
+      const db = getDirectionLabel(response.currentPlotId, b.id);
+      return (dirOrder[da] || 0) - (dirOrder[db] || 0);
+    });
+
+    for (const adj of sorted) {
+      const direction = getDirectionLabel(response.currentPlotId, adj.id);
+      const item = document.createElement('div');
+      item.className = 'plot-picker-item' + (adj.occupied ? ' plot-picker-occupied' : '');
+
+      const previewCanvas = document.createElement('canvas');
+      previewCanvas.className = 'plot-picker-preview';
+      previewCanvas.width = 120;
+      previewCanvas.height = 180;
+
+      const info = document.createElement('div');
+      info.className = 'plot-picker-info';
+
+      const label = document.createElement('div');
+      label.className = 'plot-picker-label';
+      label.textContent = `Plot ${adj.id}`;
+
+      const dir = document.createElement('div');
+      dir.className = 'plot-picker-direction';
+      dir.textContent = direction;
+
+      const status = document.createElement('div');
+      status.className = 'plot-picker-status ' + (adj.occupied ? 'taken' : 'available');
+      status.textContent = adj.occupied ? `Taken by ${adj.occupantName}` : 'Available';
+
+      info.appendChild(label);
+      info.appendChild(dir);
+      info.appendChild(status);
+      item.appendChild(previewCanvas);
+      item.appendChild(info);
+      plotPickerGrid.appendChild(item);
+
+      // Render preview
+      renderPreviewCanvas(previewCanvas, adj.plot, adj.strokes);
+
+      // Click handler for available plots
+      if (!adj.occupied) {
+        item.addEventListener('click', () => selectPlot(adj.id));
+      }
+    }
+
+    plotPicker.style.display = 'flex';
+  });
+}
+
+function selectPlot(targetPlotId) {
+  closePlotPicker();
+
+  socket.emit('request-plot-change', { targetPlotId }, (response) => {
+    if (response.error) {
+      document.getElementById('status').textContent = response.error;
+      setTimeout(() => { document.getElementById('status').textContent = ''; }, 3000);
       return;
     }
 
     myPlotId = response.plotId;
     myPlot = response.plot;
     initCanvas();
-    updatePlotInfo();
+
+    // Render existing strokes on the new plot
+    for (const stroke of response.strokes) {
+      renderStroke(stroke);
+    }
+
     drawPlotOverlay();
+    updatePlotInfo();
   });
-});
+}
+
+changePlotBtn.addEventListener('click', openPlotPicker);
 
 // ─── Incoming Events ───
 

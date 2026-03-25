@@ -154,6 +154,19 @@ function clamp(val, min, max) {
   return Math.max(min, Math.min(max, val));
 }
 
+// ─── Adjacency Helper ───
+// Grid is 5 columns × 2 rows: plots 0-4 (top), 5-9 (bottom)
+function getAdjacentPlotIds(plotId) {
+  const row = Math.floor(plotId / 5);
+  const col = plotId % 5;
+  const adjacent = [];
+  if (row > 0) adjacent.push((row - 1) * 5 + col); // up
+  if (row < 1) adjacent.push((row + 1) * 5 + col); // down
+  if (col > 0) adjacent.push(row * 5 + (col - 1)); // left
+  if (col < 4) adjacent.push(row * 5 + (col + 1)); // right
+  return adjacent;
+}
+
 // ─── Socket.IO Logic ───
 
 io.on('connection', (socket) => {
@@ -314,37 +327,87 @@ io.on('connection', (socket) => {
     console.log(`Kicked ${player.name} from room ${socket.roomCode}`);
   });
 
-  // ── Request plot change ──
-  socket.on('request-plot-change', (callback) => {
+  // ── Get adjacent plots for the picker ──
+  socket.on('get-adjacent-plots', (callback) => {
     const room = rooms.get(socket.roomCode);
     if (!room) return callback({ error: 'No room' });
 
     const player = room.players.get(socket.id);
     if (!player) return callback({ error: 'Not in room' });
 
-    if (room.availablePlots.length === 0) {
-      return callback({ error: 'No available plots' });
+    const adjacentIds = getAdjacentPlotIds(player.plotId);
+
+    // Build a set of occupied plot IDs (by other players)
+    const occupiedBy = new Map();
+    for (const [id, p] of room.players) {
+      if (id !== socket.id) {
+        occupiedBy.set(p.plotId, p.name);
+      }
     }
 
-    room.availablePlots.push(player.plotId);
+    const adjacentPlots = adjacentIds.map(id => {
+      const plot = PLOTS[id];
+      const occupant = occupiedBy.get(id) || null;
+      // Gather strokes for this plot for the preview
+      const plotStrokes = room.strokes.filter(s => s.plotId === id);
+      return {
+        id,
+        plot,
+        occupied: !!occupant,
+        occupantName: occupant,
+        strokes: plotStrokes
+      };
+    });
 
-    const filtered = room.availablePlots.filter(id => id !== player.plotId);
-    const pool = filtered.length > 0 ? filtered : room.availablePlots;
-    const newIndex = Math.floor(Math.random() * pool.length);
-    const newPlotId = pool[newIndex];
-    room.availablePlots.splice(room.availablePlots.indexOf(newPlotId), 1);
+    callback({ success: true, currentPlotId: player.plotId, adjacentPlots });
+  });
+
+  // ── Request plot change (targeted) ──
+  socket.on('request-plot-change', ({ targetPlotId }, callback) => {
+    const room = rooms.get(socket.roomCode);
+    if (!room) return callback({ error: 'No room' });
+
+    const player = room.players.get(socket.id);
+    if (!player) return callback({ error: 'Not in room' });
+
+    // Validate target is a real plot
+    if (typeof targetPlotId !== 'number' || targetPlotId < 0 || targetPlotId > 9) {
+      return callback({ error: 'Invalid plot' });
+    }
+
+    // Validate adjacency
+    const adjacentIds = getAdjacentPlotIds(player.plotId);
+    if (!adjacentIds.includes(targetPlotId)) {
+      return callback({ error: 'Plot is not adjacent' });
+    }
+
+    // Validate not occupied by another player
+    for (const [id, p] of room.players) {
+      if (id !== socket.id && p.plotId === targetPlotId) {
+        return callback({ error: 'Plot is occupied' });
+      }
+    }
 
     const oldPlotId = player.plotId;
-    player.plotId = newPlotId;
+
+    // Free old plot, claim new one
+    room.availablePlots.push(oldPlotId);
+    const idx = room.availablePlots.indexOf(targetPlotId);
+    if (idx !== -1) room.availablePlots.splice(idx, 1);
+
+    player.plotId = targetPlotId;
 
     io.to(`room:${socket.roomCode}`).emit('plot-changed', {
       id: socket.id,
       name: player.name,
       oldPlotId,
-      newPlotId
+      newPlotId: targetPlotId
     });
 
-    callback({ success: true, plotId: newPlotId, plot: PLOTS[newPlotId] });
+    // Return strokes for the new plot so the player can render them
+    const plotStrokes = room.strokes.filter(s => s.plotId === targetPlotId);
+
+    callback({ success: true, plotId: targetPlotId, plot: PLOTS[targetPlotId], strokes: plotStrokes });
   });
 
   // ── Disconnect ──

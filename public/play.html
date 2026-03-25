@@ -41,7 +41,7 @@
           <button class="brush-btn" data-brush="square">■ Square</button>
           <button class="brush-btn" data-brush="spray">✦ Spray</button>
         </div>
-        <button id="change-plot-btn" class="btn-secondary">↻ New Plot</button>
+        <button id="change-plot-btn" class="btn-secondary">↻ Move</button>
       </div>
     </div>
 
@@ -54,6 +54,16 @@
     <div class="status-bar">
       <span id="plot-info"></span>
       <span id="status"></span>
+    </div>
+
+    <!-- Plot picker overlay -->
+    <div id="plot-picker" class="plot-picker-overlay" style="display:none">
+      <div class="plot-picker-panel">
+        <h2 class="plot-picker-title">Choose a Plot</h2>
+        <p class="plot-picker-hint">Tap an adjacent plot to move there</p>
+        <div id="plot-picker-grid" class="plot-picker-grid"></div>
+        <button id="plot-picker-cancel" class="btn-secondary">Cancel</button>
+      </div>
     </div>
   </div>
 
