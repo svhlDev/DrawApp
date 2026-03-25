@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
   <title>Pixel Forge — Play</title>
   <link rel="stylesheet" href="style.css">
 </head>
@@ -44,6 +44,12 @@
         </div>
         <button id="change-plot-btn" class="btn-secondary">↻ Move</button>
         <button id="view-all-btn" class="btn-secondary">View All</button>
+      </div>
+      <div class="tool-row">
+        <div class="tool-group" style="flex:1">
+          <label>Zoom <span id="zoom-val">100</span>%</label>
+          <input type="range" id="zoom-slider" min="40" max="100" value="100" style="width:100%" />
+        </div>
       </div>
     </div>
 

@@ -320,13 +320,14 @@ input[type="text"]:focus {
   flex-direction: column;
   height: 100vh;
   height: 100dvh; /* dynamic viewport for mobile */
+  padding-top: env(safe-area-inset-top, 0px); /* iPhone notch/Dynamic Island */
 }
 
 .toolbar {
   display: flex;
   flex-direction: column;
   gap: 8px;
-  padding: 10px 12px;
+  padding: 14px 12px;
   background: #0c0c14;
   border-bottom: 1px solid #1a1a2e;
   flex-shrink: 0;
