@@ -197,6 +197,28 @@ io.on('connection', (socket) => {
     socket.join(`room:${roomCode}`);
     socket.roomCode = roomCode;
 
+    // Auto-kick after 15 minutes
+    socket.kickTimer = setTimeout(() => {
+      const r = rooms.get(socket.roomCode);
+      if (!r) return;
+      const p = r.players.get(socket.id);
+      if (!p) return;
+
+      r.availablePlots.push(p.plotId);
+      r.players.delete(socket.id);
+
+      io.to(socket.id).emit('kicked');
+      io.to(`room:${socket.roomCode}`).emit('player-left', {
+        id: socket.id,
+        name: p.name,
+        plotId: p.plotId,
+        playerCount: r.players.size
+      });
+
+      socket.disconnect(true);
+      console.log(`Auto-kicked ${p.name} from room ${socket.roomCode} (15min timeout)`);
+    }, 15 * 60 * 1000);
+
     io.to(`room:${roomCode}`).emit('player-joined', {
       id: socket.id,
       name,
@@ -327,6 +349,7 @@ io.on('connection', (socket) => {
 
   // ── Disconnect ──
   socket.on('disconnect', () => {
+    if (socket.kickTimer) clearTimeout(socket.kickTimer);
     const room = rooms.get(socket.roomCode);
     if (!room) return;
 

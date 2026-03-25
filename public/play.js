@@ -77,6 +77,11 @@ function joinRoom() {
     document.getElementById('join-screen').style.display = 'none';
     document.getElementById('play-screen').style.display = 'flex';
 
+    // Auto-redirect after 15 minutes
+    setTimeout(() => {
+      window.location.href = 'https://www.facebook.com/groups/1723374071714261';
+    }, 15 * 60 * 1000);
+
     initCanvas();
 
     // Draw existing strokes
@@ -375,8 +380,7 @@ socket.on('canvas-cleared', () => {
 });
 
 socket.on('kicked', () => {
-  alert('You have been removed from the session.');
-  window.location.reload();
+  window.location.href = 'https://www.facebook.com/groups/1723374071714261';
 });
 
 socket.on('room-closed', () => {

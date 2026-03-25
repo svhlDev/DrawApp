@@ -67,38 +67,7 @@ createBtn.addEventListener('click', () => {
 // ─── Canvas Rendering ───
 
 function drawPlotGrid() {
-  for (const plot of plots) {
-    // Plot border
-    ctx.strokeStyle = '#1a1a2e';
-    ctx.lineWidth = 1;
-    ctx.strokeRect(plot.x + 0.5, plot.y + 0.5, plot.w - 1, plot.h - 1);
-
-    // Plot number
-    ctx.fillStyle = '#1a1a2e';
-    ctx.font = '11px monospace';
-    ctx.textAlign = 'left';
-    ctx.fillText(`${plot.id}`, plot.x + 6, plot.y + 16);
-  }
-
-  // Show assigned player names on plots
-  for (const [id, player] of players) {
-    const plot = plots[player.plotId];
-    if (!plot) continue;
-    const color = PLOT_COLORS[player.plotId % PLOT_COLORS.length];
-
-    // Colored border for assigned plots
-    ctx.strokeStyle = color + '60';
-    ctx.lineWidth = 2;
-    ctx.strokeRect(plot.x + 1, plot.y + 1, plot.w - 2, plot.h - 2);
-
-    // Name tag
-    ctx.fillStyle = color + '30';
-    ctx.fillRect(plot.x + 2, plot.y + 2, plot.w - 4, 20);
-    ctx.fillStyle = color;
-    ctx.font = 'bold 10px monospace';
-    ctx.textAlign = 'left';
-    ctx.fillText(player.name, plot.x + 6, plot.y + 14);
-  }
+  // No grid or player highlights — clean canvas only
 }
 
 function renderStroke(stroke) {

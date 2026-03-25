@@ -283,10 +283,23 @@ input[type="text"]:focus {
 .host-canvas-area {
   flex: 1;
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
   padding: 16px;
   overflow: hidden;
+}
+
+.canvas-headline {
+  font-family: 'Orbitron', sans-serif;
+  font-size: 42px;
+  font-weight: 900;
+  letter-spacing: 6px;
+  background: linear-gradient(135deg, #e94560, #ff6b6b, #ffa502);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  margin-bottom: 12px;
+  text-align: center;
 }
 
 .host-canvas-area canvas {
