@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Pixel Forge — Play</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body class="play-body">
+
+  <!-- Join screen -->
+  <div id="join-screen" class="join-screen">
+    <h1 class="logo logo-sm">PIXEL FORGE</h1>
+    <input type="text" id="name-input" placeholder="Your name" maxlength="20" autocomplete="off" />
+    <button id="join-btn" class="btn-primary">Join</button>
+    <p id="join-error" class="error"></p>
+  </div>
+
+  <!-- Play screen -->
+  <div id="play-screen" class="play-screen" style="display:none">
+
+    <!-- Toolbar -->
+    <div class="toolbar">
+      <div class="tool-row">
+        <div class="tool-group">
+          <label>Color</label>
+          <input type="color" id="color-picker" value="#e94560" />
+        </div>
+        <div class="tool-group">
+          <label>Size <span id="size-val">5</span></label>
+          <input type="range" id="brush-size" min="1" max="50" value="5" />
+        </div>
+        <div class="tool-group">
+          <label>Opacity <span id="opacity-val">100</span>%</label>
+          <input type="range" id="opacity" min="5" max="100" value="100" />
+        </div>
+      </div>
+      <div class="tool-row">
+        <div class="brush-buttons">
+          <button class="brush-btn active" data-brush="round">● Round</button>
+          <button class="brush-btn" data-brush="square">■ Square</button>
+          <button class="brush-btn" data-brush="spray">✦ Spray</button>
+        </div>
+        <button id="change-plot-btn" class="btn-secondary">↻ New Plot</button>
+      </div>
+    </div>
+
+    <!-- Canvas -->
+    <div class="canvas-wrapper">
+      <canvas id="canvas"></canvas>
+    </div>
+
+    <!-- Status -->
+    <div class="status-bar">
+      <span id="plot-info"></span>
+      <span id="status"></span>
+    </div>
+  </div>
+
+  <script src="/socket.io/socket.io.js"></script>
+  <script src="play.js"></script>
+</body>
+</html>

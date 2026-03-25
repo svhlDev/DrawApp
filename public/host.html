@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Pixel Forge — Host</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body class="host-body">
+
+  <!-- Setup screen -->
+  <div id="setup" class="setup-screen">
+    <h1 class="logo">PIXEL FORGE</h1>
+    <p class="subtitle">Collaborative Digital Canvas</p>
+    <button id="create-btn" class="btn-primary">Create Room</button>
+  </div>
+
+  <!-- Live session -->
+  <div id="session" class="session-screen" style="display:none">
+    <div class="host-layout">
+
+      <!-- Sidebar: QR + admin -->
+      <div class="host-sidebar">
+        <div class="room-badge">
+          <div class="room-label">ROOM</div>
+          <div class="room-code" id="room-code"></div>
+        </div>
+
+        <div class="qr-box">
+          <img id="qr-img" alt="QR Code" />
+          <div class="qr-url" id="qr-url"></div>
+        </div>
+
+        <div class="player-list-header">
+          <span>Players</span>
+          <span id="player-count" class="player-count-badge">0/10</span>
+        </div>
+        <ul id="player-list" class="player-list"></ul>
+
+        <div class="admin-controls">
+          <button id="clear-btn" class="btn-danger">Clear Canvas</button>
+          <button id="export-btn" class="btn-secondary">Export PNG</button>
+        </div>
+      </div>
+
+      <!-- Canvas -->
+      <div class="host-canvas-area">
+        <canvas id="canvas"></canvas>
+      </div>
+
+    </div>
+  </div>
+
+  <script src="/socket.io/socket.io.js"></script>
+  <script src="host.js"></script>
+</body>
+</html>

@@ -1,0 +1,19 @@
+{
+  "name": "pixel-forge",
+  "version": "1.0.0",
+  "description": "Collaborative real-time pixel art canvas",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "express": "^4.21.0",
+    "express-rate-limit": "^7.4.0",
+    "helmet": "^8.0.0",
+    "qrcode": "^1.5.4",
+    "socket.io": "^4.8.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}
