@@ -404,12 +404,6 @@ io.on('connection', (socket) => {
       return callback({ error: 'Invalid plot' });
     }
 
-    // Validate adjacency
-    const adjacentIds = getAdjacentPlotIds(player.plotId);
-    if (!adjacentIds.includes(targetPlotId)) {
-      return callback({ error: 'Plot is not adjacent' });
-    }
-
     // Validate not occupied by another player
     for (const [id, p] of room.players) {
       if (id !== socket.id && p.plotId === targetPlotId) {

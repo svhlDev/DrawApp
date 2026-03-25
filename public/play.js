@@ -394,10 +394,9 @@ function renderFullCanvas(targetCanvas, data, options) {
   fc.textAlign = 'center';
   fc.fillText('YOU', (cur.x + cur.w / 2) * scale, (cur.y + cur.h / 2) * scale);
 
-  // Overlay info on plots (occupied / adjacent)
+  // Overlay info on plots (occupied / available)
   if (options && options.showPickerInfo) {
     const occupiedBy = data.occupiedBy || {};
-    const adjacentIds = data.adjacentIds || [];
 
     for (const plot of data.plots) {
       if (plot.id === data.currentPlotId) continue;
@@ -405,7 +404,6 @@ function renderFullCanvas(targetCanvas, data, options) {
       const py = plot.y * scale;
       const pw = plot.w * scale;
       const ph = plot.h * scale;
-      const isAdj = adjacentIds.includes(plot.id);
       const occupant = occupiedBy[plot.id];
 
       if (occupant) {
@@ -416,15 +414,11 @@ function renderFullCanvas(targetCanvas, data, options) {
         fc.font = `bold ${Math.round(8 * scale)}px monospace`;
         fc.textAlign = 'center';
         fc.fillText('TAKEN', px + pw / 2, py + ph / 2);
-      } else if (isAdj) {
-        // Adjacent + available — highlight border
+      } else {
+        // Available — highlight border
         fc.strokeStyle = '#2ed57380';
         fc.lineWidth = 3;
         fc.strokeRect(px + 1, py + 1, pw - 2, ph - 2);
-      } else {
-        // Not adjacent — slight dim
-        fc.fillStyle = 'rgba(0, 0, 0, 0.35)';
-        fc.fillRect(px, py, pw, ph);
       }
     }
   }
@@ -516,7 +510,6 @@ function handlePickerTap(e) {
   for (const plot of pickerData.plots) {
     if (x >= plot.x && x <= plot.x + plot.w && y >= plot.y && y <= plot.y + plot.h) {
       if (plot.id === pickerData.currentPlotId) return; // already here
-      if (!pickerData.adjacentIds.includes(plot.id)) return; // not adjacent
       if (pickerData.occupiedBy[plot.id]) return; // taken
       selectPlot(plot.id);
       return;
