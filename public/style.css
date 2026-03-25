@@ -271,42 +271,6 @@ input[type="text"]:focus {
   background: #e9456020;
 }
 
-.rules-section {
-  padding-top: 12px;
-  border-top: 1px solid #1a1a2e;
-}
-
-.rules-header {
-  font-size: 10px;
-  text-transform: uppercase;
-  letter-spacing: 2px;
-  color: #e94560;
-  margin-bottom: 6px;
-  margin-top: 10px;
-}
-
-.rules-header:first-child {
-  margin-top: 0;
-}
-
-.rules-list {
-  font-size: 10px;
-  color: #b2bec3;
-  line-height: 1.5;
-  padding-left: 18px;
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-
-.rules-list strong {
-  color: #dfe6e9;
-}
-
-.rules-unordered {
-  list-style: disc;
-}
-
 .admin-controls {
   display: flex;
   flex-direction: column;
