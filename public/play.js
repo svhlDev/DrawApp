@@ -16,6 +16,8 @@ let isDrawing = false;
 let currentStroke = [];
 let currentBrush = 'round';
 let displayRatio = 1;
+let viewOffsetX = 0;
+let viewOffsetY = 0;
 
 // ─── DOM ───
 const canvas = document.getElementById('canvas');
@@ -71,6 +73,10 @@ function joinRoom() {
     canvasW = response.canvasW;
     canvasH = response.canvasH;
 
+    // Switch screens first so canvas wrapper has dimensions
+    document.getElementById('join-screen').style.display = 'none';
+    document.getElementById('play-screen').style.display = 'flex';
+
     initCanvas();
 
     // Draw existing strokes
@@ -78,29 +84,32 @@ function joinRoom() {
       renderStroke(stroke);
     }
     drawPlotOverlay();
-
-    // Switch screens
-    document.getElementById('join-screen').style.display = 'none';
-    document.getElementById('play-screen').style.display = 'flex';
     updatePlotInfo();
   });
 }
 
 function initCanvas() {
   const dpr = window.devicePixelRatio || 1;
-  const wrapperWidth = document.querySelector('.canvas-wrapper').clientWidth - 16;
-  displayRatio = Math.min(wrapperWidth / canvasW, 1);
-  const displayW = canvasW * displayRatio;
-  const displayH = canvasH * displayRatio;
+  const wrapperEl = document.querySelector('.canvas-wrapper');
+  const wrapperWidth = wrapperEl.clientWidth - 16;
+  const wrapperHeight = wrapperEl.clientHeight - 16;
 
-  canvas.width = canvasW * dpr;
-  canvas.height = canvasH * dpr;
+  // Focus canvas on the player's own plot
+  viewOffsetX = myPlot.x;
+  viewOffsetY = myPlot.y;
+
+  displayRatio = Math.min(wrapperWidth / myPlot.w, wrapperHeight / myPlot.h);
+  const displayW = myPlot.w * displayRatio;
+  const displayH = myPlot.h * displayRatio;
+
+  canvas.width = myPlot.w * dpr;
+  canvas.height = myPlot.h * dpr;
   canvas.style.width = displayW + 'px';
   canvas.style.height = displayH + 'px';
   ctx.scale(dpr, dpr);
 
   ctx.fillStyle = '#0a0a0a';
-  ctx.fillRect(0, 0, canvasW, canvasH);
+  ctx.fillRect(0, 0, myPlot.w, myPlot.h);
 }
 
 function updatePlotInfo() {
@@ -121,8 +130,8 @@ function getCanvasCoords(e) {
     clientY = e.clientY;
   }
   return {
-    x: (clientX - rect.left) / displayRatio,
-    y: (clientY - rect.top) / displayRatio
+    x: (clientX - rect.left) / displayRatio + viewOffsetX,
+    y: (clientY - rect.top) / displayRatio + viewOffsetY
   };
 }
 
@@ -209,7 +218,7 @@ function renderLocalSegment() {
 
   ctx.save();
   ctx.beginPath();
-  ctx.rect(myPlot.x, myPlot.y, myPlot.w, myPlot.h);
+  ctx.rect(0, 0, myPlot.w, myPlot.h);
   ctx.clip();
 
   ctx.globalAlpha = opacity;
@@ -225,8 +234,8 @@ function renderLocalSegment() {
       const angle = Math.random() * Math.PI * 2;
       const radius = Math.random() * brushSize;
       ctx.fillRect(
-        p.x + Math.cos(angle) * radius,
-        p.y + Math.sin(angle) * radius,
+        p.x - viewOffsetX + Math.cos(angle) * radius,
+        p.y - viewOffsetY + Math.sin(angle) * radius,
         1.5, 1.5
       );
     }
@@ -234,8 +243,8 @@ function renderLocalSegment() {
     const a = currentStroke[currentStroke.length - 2];
     const b = currentStroke[currentStroke.length - 1];
     ctx.beginPath();
-    ctx.moveTo(a.x, a.y);
-    ctx.lineTo(b.x, b.y);
+    ctx.moveTo(a.x - viewOffsetX, a.y - viewOffsetY);
+    ctx.lineTo(b.x - viewOffsetX, b.y - viewOffsetY);
     ctx.stroke();
   }
 
@@ -250,9 +259,12 @@ function renderStroke(stroke) {
   const plot = plots[stroke.plotId];
   if (!plot) return;
 
+  // Only render strokes that belong to the player's plot
+  if (plot.id !== myPlotId) return;
+
   ctx.save();
   ctx.beginPath();
-  ctx.rect(plot.x, plot.y, plot.w, plot.h);
+  ctx.rect(0, 0, myPlot.w, myPlot.h);
   ctx.clip();
 
   ctx.globalAlpha = opacity;
@@ -268,8 +280,8 @@ function renderStroke(stroke) {
         const angle = Math.random() * Math.PI * 2;
         const radius = Math.random() * brushSize;
         ctx.fillRect(
-          p.x + Math.cos(angle) * radius,
-          p.y + Math.sin(angle) * radius,
+          p.x - viewOffsetX + Math.cos(angle) * radius,
+          p.y - viewOffsetY + Math.sin(angle) * radius,
           1.5, 1.5
         );
       }
@@ -277,13 +289,13 @@ function renderStroke(stroke) {
   } else {
     if (points.length === 1) {
       ctx.beginPath();
-      ctx.arc(points[0].x, points[0].y, brushSize / 2, 0, Math.PI * 2);
+      ctx.arc(points[0].x - viewOffsetX, points[0].y - viewOffsetY, brushSize / 2, 0, Math.PI * 2);
       ctx.fill();
     } else {
       ctx.beginPath();
-      ctx.moveTo(points[0].x, points[0].y);
+      ctx.moveTo(points[0].x - viewOffsetX, points[0].y - viewOffsetY);
       for (let i = 1; i < points.length; i++) {
-        ctx.lineTo(points[i].x, points[i].y);
+        ctx.lineTo(points[i].x - viewOffsetX, points[i].y - viewOffsetY);
       }
       ctx.stroke();
     }
@@ -295,25 +307,17 @@ function renderStroke(stroke) {
 }
 
 function drawPlotOverlay() {
-  for (const plot of plots) {
-    if (plot.id === myPlotId) {
-      ctx.strokeStyle = '#e94560';
-      ctx.lineWidth = 2;
-      ctx.setLineDash([]);
-      ctx.strokeRect(plot.x + 1, plot.y + 1, plot.w - 2, plot.h - 2);
+  // Draw border around the player's plot
+  ctx.strokeStyle = '#e94560';
+  ctx.lineWidth = 2;
+  ctx.setLineDash([]);
+  ctx.strokeRect(1, 1, myPlot.w - 2, myPlot.h - 2);
 
-      // "YOUR PLOT" label
-      ctx.fillStyle = '#e94560';
-      ctx.font = 'bold 9px monospace';
-      ctx.textAlign = 'right';
-      ctx.fillText('YOUR PLOT', plot.x + plot.w - 6, plot.y + plot.h - 6);
-    } else {
-      ctx.strokeStyle = '#1a1a2e';
-      ctx.lineWidth = 1;
-      ctx.setLineDash([]);
-      ctx.strokeRect(plot.x + 0.5, plot.y + 0.5, plot.w - 1, plot.h - 1);
-    }
-  }
+  // "YOUR PLOT" label
+  ctx.fillStyle = '#e94560';
+  ctx.font = 'bold 9px monospace';
+  ctx.textAlign = 'right';
+  ctx.fillText('YOUR PLOT', myPlot.w - 6, myPlot.h - 6);
 }
 
 // ─── Plot Change ───
@@ -336,6 +340,7 @@ changePlotBtn.addEventListener('click', () => {
 
     myPlotId = response.plotId;
     myPlot = response.plot;
+    initCanvas();
     updatePlotInfo();
     drawPlotOverlay();
   });
@@ -365,7 +370,7 @@ socket.on('plot-changed', (data) => {
 
 socket.on('canvas-cleared', () => {
   ctx.fillStyle = '#0a0a0a';
-  ctx.fillRect(0, 0, canvasW, canvasH);
+  ctx.fillRect(0, 0, myPlot.w, myPlot.h);
   drawPlotOverlay();
 });
 
