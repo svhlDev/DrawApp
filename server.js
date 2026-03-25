@@ -362,6 +362,35 @@ io.on('connection', (socket) => {
     callback({ success: true, currentPlotId: player.plotId, adjacentPlots });
   });
 
+  // ── Get full canvas data (for overview + grid picker) ──
+  socket.on('get-full-canvas', (callback) => {
+    const room = rooms.get(socket.roomCode);
+    if (!room) return callback({ error: 'No room' });
+
+    const player = room.players.get(socket.id);
+    if (!player) return callback({ error: 'Not in room' });
+
+    const adjacentIds = getAdjacentPlotIds(player.plotId);
+
+    const occupiedBy = new Map();
+    for (const [id, p] of room.players) {
+      if (id !== socket.id) {
+        occupiedBy.set(p.plotId, p.name);
+      }
+    }
+
+    callback({
+      success: true,
+      strokes: room.strokes,
+      currentPlotId: player.plotId,
+      adjacentIds,
+      plots: PLOTS,
+      canvasW: CANVAS_W,
+      canvasH: CANVAS_H,
+      occupiedBy: Object.fromEntries(occupiedBy)
+    });
+  });
+
   // ── Request plot change (targeted) ──
   socket.on('request-plot-change', ({ targetPlotId }, callback) => {
     const room = rooms.get(socket.roomCode);

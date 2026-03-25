@@ -43,6 +43,7 @@
           <button class="brush-btn" data-brush="eraser">✕ Eraser</button>
         </div>
         <button id="change-plot-btn" class="btn-secondary">↻ Move</button>
+        <button id="view-all-btn" class="btn-secondary">View All</button>
       </div>
     </div>
 
@@ -57,13 +58,21 @@
       <span id="status"></span>
     </div>
 
-    <!-- Plot picker overlay -->
-    <div id="plot-picker" class="plot-picker-overlay" style="display:none">
-      <div class="plot-picker-panel">
-        <h2 class="plot-picker-title">Choose a Plot</h2>
-        <p class="plot-picker-hint">Tap an adjacent plot to move there</p>
-        <div id="plot-picker-grid" class="plot-picker-grid"></div>
+    <!-- Plot picker overlay (grid canvas) -->
+    <div id="plot-picker" class="fullcanvas-overlay" style="display:none">
+      <div class="fullcanvas-panel">
+        <h2 class="fullcanvas-title">Tap an adjacent plot to move</h2>
+        <canvas id="picker-canvas" class="fullcanvas-canvas"></canvas>
         <button id="plot-picker-cancel" class="btn-secondary">Cancel</button>
+      </div>
+    </div>
+
+    <!-- Full canvas view overlay -->
+    <div id="view-all-overlay" class="fullcanvas-overlay" style="display:none">
+      <div class="fullcanvas-panel">
+        <h2 class="fullcanvas-title">Full Canvas</h2>
+        <canvas id="viewall-canvas" class="fullcanvas-canvas"></canvas>
+        <button id="view-all-close" class="btn-secondary">Close</button>
       </div>
     </div>
   </div>
