@@ -335,6 +335,7 @@ input[type="text"]:focus {
   flex-direction: column;
   gap: 8px;
   padding: 14px 12px;
+  padding-top: 24px;
   background: #0c0c14;
   border-bottom: 1px solid #1a1a2e;
   flex-shrink: 0;
